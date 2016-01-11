@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sixadc-clients>
+    <sixadc-client>
+        <sixadc-client-id>adc100</sixadc-client-id>
+        <sixadc-client-desc>CONEXION NAVSAT-WILLIAN</sixadc-client-desc>
+        <atributos>
+            <atributo nombre="binAdq" valor="222185"></atributo>
+        </atributos>
+        <ip-addresses>
+            <ip-address>172.19.103.29</ip-address>
+        </ip-addresses>
+        <six-hostname>none100</six-hostname>
+        <six-username>none100</six-username>
+        <six-password></six-password>
+        <enabled>true</enabled>
+        <sixadc-client-profiles>
+            <profile-id>perfil1</profile-id>
+            <profile-id>perfil2</profile-id>
+        </sixadc-client-profiles>
+    </sixadc-client>
+    <sixadc-client>
+        <sixadc-client-id>adc100B</sixadc-client-id>
+        <sixadc-client-desc>CONEXION NAVSAT 2</sixadc-client-desc>
+        <atributos>
+            <atributo nombre="binAdq" valor="222185"></atributo>
+        </atributos>
+        <ip-addresses>
+            <ip-address>172.19.103.45</ip-address>
+        </ip-addresses>
+        <six-hostname>none100</six-hostname>
+        <six-username>none100b</six-username>
+        <six-password></six-password>
+        <enabled>true</enabled>
+        <sixadc-client-profiles>
+            <profile-id>perfil1</profile-id>
+            <profile-id>perfil2</profile-id>
+        </sixadc-client-profiles>
+    </sixadc-client>
+</sixadc-clients>

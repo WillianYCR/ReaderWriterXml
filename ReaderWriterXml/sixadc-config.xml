@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sixadc-config>
+    <message-formats>
+        <message-format>
+            <message-format-id>ISOINTST</message-format-id>
+            <message-format-desc>Tramas ISO</message-format-desc>
+            <transformer-config-file>transformerConfig.xml</transformer-config-file>
+            <router-config-file>routerConfig.xml</router-config-file>
+            <transformer-struct>ISO8583</transformer-struct>
+        </message-format>
+        <message-format>
+            <message-format-id>UNIINTER</message-format-id>
+            <message-format-desc>Tramas Planas</message-format-desc>
+            <transformer-config-file>transformer-canal-interno.xml</transformer-config-file>
+            <router-config-file>configRuteo-canal-interno.xml</router-config-file>
+            <transformer-struct>PLAIN</transformer-struct>
+        </message-format>
+    </message-formats>
+    <admin-queues classManager="com.novatronic.sixadc.manager.RoutersManager" queueLocation="localhost:1099" sleepTime="10" refreshTime="30">
+        <admin-queue>
+            <admin-queue-id>adminCola1</admin-queue-id>
+            <worker-threads-count>10</worker-threads-count>
+            <message-type>
+                <message-type-id>tipoMensajeSIX</message-type-id>
+                <message-type-desc>Tipos de mensaje via Driver SIX</message-type-desc>
+                <supported-message-formats>
+                    <message-format-id>ISOINTST</message-format-id>
+                </supported-message-formats>
+            </message-type>
+        </admin-queue>
+        <admin-queue>
+            <admin-queue-id>adminCola2</admin-queue-id>
+            <worker-threads-count>15</worker-threads-count>
+            <message-type>
+                <message-type-id>tipoMensajeSIX</message-type-id>
+                <message-type-desc>Tipos de mensaje via Driver SIX</message-type-desc>
+                <supported-message-formats>
+                    <message-format-id>ISOINTST</message-format-id>
+                </supported-message-formats>
+            </message-type>
+        </admin-queue>
+    </admin-queues>
+    <drivers classManager="com.novatronic.sixadc.manager.DriversManager" queueLocation="localhost:1099" sleepTime="10" refreshTime="30">
+        <driver driverId="driver1" adminQueueId="adminCola1" type="ASYNCRONOUS" timeOutConnect="5" timeOutRead="5" retries="5" timeOutQueueRead="28">
+            <name>tcp_drvVISA</name>
+            <port>4230</port>
+            <max-concurrent-connections>50</max-concurrent-connections>
+            <forward-process>ISOINTST</forward-process>
+            <valida-ip>true</valida-ip>
+            <concurrent-user-support>false</concurrent-user-support>
+            <filters>
+                <in-filters>
+                    <in-filter>com.novatronic.loadbalancer.driver.filters.FromBinaryFrameFilter</in-filter>
+                </in-filters>
+                <out-filters>
+                    <out-filter>com.novatronic.loadbalancer.driver.filters.ToBinaryFrameFilter</out-filter>
+                </out-filters>
+            </filters>
+        </driver>
+        <driver driverId="driver2" adminQueueId="adminCola2" type="ASYNCRONOUS" timeOutConnect="5" timeOutRead="5" retries="5" timeOutQueueRead="28">
+            <name>tcp_drvswi</name>
+            <port>4220</port>
+            <max-concurrent-connections>100</max-concurrent-connections>
+            <forward-process>ISOINTST</forward-process>
+            <valida-ip>true</valida-ip>
+            <concurrent-user-support>false</concurrent-user-support>
+            <filters>
+                <in-filters>
+                    <in-filter>com.novatronic.loadbalancer.driver.filters.PutBinAdqFilter</in-filter>
+                </in-filters>
+                <out-filters>
+                    <out-filter></out-filter>
+                </out-filters>
+            </filters>
+        </driver>
+    </drivers>
+    <balancers classManager="com.novatronic.sixadc.manager.BalancersManager" queueLocation="localhost:1099" sleepTime="10" refreshTime="30">
+        <balancer id="balancerPPV">
+            <algorithm>ROUND_ROBIN</algorithm>
+            <worker-threads-count>15</worker-threads-count>
+        </balancer>
+        <balancer id="balancerOLC">
+            <algorithm>ROUND_ROBIN</algorithm>
+            <worker-threads-count>15</worker-threads-count>
+        </balancer>
+        <balancer id="balancerDefault">
+            <algorithm>ROUND_ROBIN</algorithm>
+            <worker-threads-count>5</worker-threads-count>
+        </balancer>
+    </balancers>
+    <routes>
+        <route>
+            <route-id>rutaServicio1</route-id>
+            <route-desc>Ruta de prueba PPV</route-desc>
+            <balancer-id>balancerPPV</balancer-id>
+            <status>AVAILABLE</status>
+        </route>
+        <route>
+            <route-id>rutaServicio2</route-id>
+            <route-desc>Ruta de prueba OLC</route-desc>
+            <balancer-id>balancerOLC</balancer-id>
+            <status>AVAILABLE</status>
+        </route>
+    </routes>
+    <services>
+        <service>
+            <service-id>servicio1</service-id>
+            <service-desc>Servicio Prepago Virtual</service-desc>
+            <discriminationRules></discriminationRules>
+            <authorization-bins>
+                <bin>
+                    <bin-id>808080</bin-id>
+                    <bin-status>AVAILABLE</bin-status>
+                </bin>
+            </authorization-bins>
+            <routes>
+                <route-id>rutaServicio1</route-id>
+            </routes>
+        </service>
+        <service>
+            <service-id>servicio2</service-id>
+            <service-desc>OLC</service-desc>
+            <discriminationRules></discriminationRules>
+            <authorization-bins>
+                <bin>
+                    <bin-id>808080</bin-id>
+                    <bin-status>AVAILABLE</bin-status>
+                </bin>
+            </authorization-bins>
+            <routes>
+                <route-id>rutaServicio2</route-id>
+            </routes>
+        </service>
+    </services>
+    <service-nodes classManager="com.novatronic.sixadc.manager.ChannelManager" queueLocation="localhost:1099" sleepTime="10" refreshTime="30">
+        <service-node>
+            <service-node-id>Node1</service-node-id>
+            <ip-address>172.19.72.108</ip-address>
+            <bin-monitor-pause>42</bin-monitor-pause>
+            <admin-channel connectTimeOut="5" readTimeOut="130" timeOutQueueRead="120" poolSize="1" sleepTime="10" refreshTime="30" maxReconnect="999" reconnectPause="10">
+                <admin-channel-id>AQ_Node1_AdminChannel</admin-channel-id>
+                <admin-channel-port>6660</admin-channel-port>
+                <admin-channel-status>AVAILABLE</admin-channel-status>
+                <timeoutReceive>120</timeoutReceive>
+                <lagTimeReceive>10</lagTimeReceive>
+                <timeoutSend>120</timeoutSend>
+                <lagTimeSend>10</lagTimeSend>
+            </admin-channel>
+            <default-channel connectTimeOut="5" readTimeOut="130" timeOutQueueRead="120" poolSize="1" sleepTime="10" refreshTime="30" maxReconnect="999" reconnectPause="10">
+                <default-channel-id>defaultChannel1</default-channel-id>
+                <default-channel-port>6660</default-channel-port>
+                <default-channel-status>AVAILABLE</default-channel-status>
+                <worker-threads-count>15</worker-threads-count>
+                <useCorrelationID>true</useCorrelationID>
+                <timeoutReceive>120</timeoutReceive>
+                <lagTimeReceive>10</lagTimeReceive>
+                <timeoutSend>120</timeoutSend>
+                <lagTimeSend>10</lagTimeSend>
+                <umbralWarning>40</umbralWarning>
+                <umbralReconnect>100</umbralReconnect>
+            </default-channel>
+            <service-channels>
+                <service-channel connectTimeOut="5" readTimeOut="130" timeOutQueueRead="120" poolSize="1" sleepTime="10" refreshTime="30" maxReconnect="999" reconnectPause="10">
+                    <service-channel-id>servChanel1</service-channel-id>
+                    <service-channel-status>AVAILABLE</service-channel-status>
+                    <service-channel-port>6660</service-channel-port>
+                    <worker-threads-count>15</worker-threads-count>
+                    <authorized-services>
+                        <servicio-id>servicio1</servicio-id>
+                    </authorized-services>
+                    <useCorrelationID>true</useCorrelationID>
+                    <timeoutReceive>120</timeoutReceive>
+                    <lagTimeReceive>10</lagTimeReceive>
+                    <timeoutSend>120</timeoutSend>
+                    <lagTimeSend>10</lagTimeSend>
+                    <umbralWarning>40</umbralWarning>
+                    <umbralReconnect>100</umbralReconnect>
+                </service-channel>
+                <service-channel connectTimeOut="5" readTimeOut="130" timeOutQueueRead="120" poolSize="1" sleepTime="10" refreshTime="30" maxReconnect="999" reconnectPause="10">
+                    <service-channel-id>servChanel2</service-channel-id>
+                    <service-channel-status>AVAILABLE</service-channel-status>
+                    <service-channel-port>6660</service-channel-port>
+                    <worker-threads-count>15</worker-threads-count>
+                    <authorized-services>
+                        <servicio-id>servicio2</servicio-id>
+                    </authorized-services>
+                    <useCorrelationID>true</useCorrelationID>
+                    <timeoutReceive>120</timeoutReceive>
+                    <lagTimeReceive>10</lagTimeReceive>
+                    <timeoutSend>120</timeoutSend>
+                    <lagTimeSend>10</lagTimeSend>
+                    <umbralWarning>40</umbralWarning>
+                    <umbralReconnect>100</umbralReconnect>
+                </service-channel>
+            </service-channels>
+        </service-node>
+        <service-node>
+            <service-node-id>Node2</service-node-id>
+            <ip-address>172.19.76.73</ip-address>
+            <bin-monitor-pause>42</bin-monitor-pause>
+            <admin-channel connectTimeOut="5" readTimeOut="130" timeOutQueueRead="120" poolSize="1" sleepTime="10" refreshTime="30" maxReconnect="999" reconnectPause="10">
+                <admin-channel-id>AQ_Node1_AdminChanne2</admin-channel-id>
+                <admin-channel-port>6660</admin-channel-port>
+                <admin-channel-status>AVAILABLE</admin-channel-status>
+                <timeoutReceive>120</timeoutReceive>
+                <lagTimeReceive>10</lagTimeReceive>
+                <timeoutSend>120</timeoutSend>
+                <lagTimeSend>10</lagTimeSend>
+            </admin-channel>
+            <default-channel connectTimeOut="5" readTimeOut="130" timeOutQueueRead="120" poolSize="1" sleepTime="10" refreshTime="30" maxReconnect="999" reconnectPause="10">
+                <default-channel-id>defaultChannel2</default-channel-id>
+                <default-channel-port>6660</default-channel-port>
+                <default-channel-status>AVAILABLE</default-channel-status>
+                <worker-threads-count>15</worker-threads-count>
+                <useCorrelationID>true</useCorrelationID>
+                <timeoutReceive>120</timeoutReceive>
+                <lagTimeReceive>10</lagTimeReceive>
+                <timeoutSend>120</timeoutSend>
+                <lagTimeSend>10</lagTimeSend>
+                <umbralWarning>40</umbralWarning>
+                <umbralReconnect>100</umbralReconnect>
+            </default-channel>
+            <service-channels>
+                <service-channel connectTimeOut="5" readTimeOut="130" timeOutQueueRead="120" poolSize="1" sleepTime="10" refreshTime="30" maxReconnect="999" reconnectPause="10">
+                    <service-channel-id>servChanel3</service-channel-id>
+                    <service-channel-status>AVAILABLE</service-channel-status>
+                    <service-channel-port>6660</service-channel-port>
+                    <worker-threads-count>15</worker-threads-count>
+                    <authorized-services>
+                        <servicio-id>servicio1</servicio-id>
+                    </authorized-services>
+                    <useCorrelationID>true</useCorrelationID>
+                    <timeoutReceive>120</timeoutReceive>
+                    <lagTimeReceive>10</lagTimeReceive>
+                    <timeoutSend>120</timeoutSend>
+                    <lagTimeSend>10</lagTimeSend>
+                    <umbralWarning>40</umbralWarning>
+                    <umbralReconnect>100</umbralReconnect>
+                </service-channel>
+                <service-channel connectTimeOut="5" readTimeOut="130" timeOutQueueRead="120" poolSize="1" sleepTime="10" refreshTime="30" maxReconnect="999" reconnectPause="10">
+                    <service-channel-id>servChanel4</service-channel-id>
+                    <service-channel-status>AVAILABLE</service-channel-status>
+                    <service-channel-port>6660</service-channel-port>
+                    <worker-threads-count>15</worker-threads-count>
+                    <authorized-services>
+                        <servicio-id>servicio2</servicio-id>
+                    </authorized-services>
+                    <useCorrelationID>true</useCorrelationID>
+                    <timeoutReceive>120</timeoutReceive>
+                    <lagTimeReceive>10</lagTimeReceive>
+                    <timeoutSend>120</timeoutSend>
+                    <lagTimeSend>10</lagTimeSend>
+                    <umbralWarning>40</umbralWarning>
+                    <umbralReconnect>100</umbralReconnect>
+                </service-channel>
+            </service-channels>
+        </service-node>
+    </service-nodes>
+    <profiles>
+        <profile>
+            <profile-id>perfil1</profile-id>
+            <profile-desc>Perfil de prueba 2</profile-desc>
+            <profile-drivers>
+                <river-id>driver1</river-id>
+                <river-id>driver2</river-id>
+            </profile-drivers>
+            <auth-services>
+                <service-id>servicio1</service-id>
+                <service-id>servicio2</service-id>
+            </auth-services>
+        </profile>
+    </profiles>
+</sixadc-config>
